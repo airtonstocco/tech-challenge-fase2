@@ -1,7 +1,6 @@
 import base64
 import requests
 import json
-import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import boto3
@@ -34,14 +33,15 @@ def lambda_handler(event, context):
                 "body": "API retornou sem dados."
             }
 
-        df = pd.DataFrame(data_json['results'])
-
+        data = data_json['results']
+              
         # 2. Adiciona partição
-        partition_date = datetime.today().strftime('%Y-%m-%d')
-        df['partition_date'] = partition_date
+        partition_date = datetime.today().strftime('%Y-%m-%d')  
+        for row in data:
+            row['partition_date'] = partition_date
 
         # 3. Salva como Parquet
-        table = pa.Table.from_pandas(df)
+        table = pa.Table.from_pylist(data)
         parquet_path = "/tmp/b3.parquet"
         pq.write_table(table, parquet_path)
 
